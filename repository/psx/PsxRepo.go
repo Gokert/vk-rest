@@ -33,6 +33,62 @@ func GetPsxRepo(config *configs.DbPsxConfig, log *logrus.Logger) (*PsxRepo, erro
 	return &PsxRepo{db: db}, nil
 }
 
+func (repo *PsxRepo) GetUserBalance(userId uint64) (uint64, error) {
+	var total uint64 = 0
+
+	fmt.Println(userId)
+
+	rows, err := repo.db.Query(`
+	select profile.id, SUM(quest.cost) FROM quest
+	LEFT JOIN quest_on_profile ON quest.id = quest_on_profile.id_quest
+	LEFT JOIN profile ON profile.id = quest_on_profile.id_profile
+	WHERE profile.id = $1
+	GROUP BY profile.id`, userId)
+	if err != nil {
+		return 0, fmt.Errorf("sql get user balance error: %s", err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id uint64
+		var balance uint64
+
+		err := rows.Scan(&id, &balance)
+		if err != nil {
+			return 0, fmt.Errorf("scan get user balance error: %s", err.Error())
+		}
+		total += balance
+	}
+
+	return total, nil
+}
+
+func (repo *PsxRepo) GetUserStat(userId uint64) (*models.UserStat, error) {
+	post := models.UserStat{}
+
+	rows, err := repo.db.Query(`
+	select quest.id, quest.name, quest.cost FROM quest
+	LEFT JOIN quest_on_profile ON quest.id = quest_on_profile.id_quest
+	LEFT JOIN profile ON profile.id = quest_on_profile.id_profile
+	WHERE profile.id = $1`, userId)
+	if err != nil {
+		return nil, fmt.Errorf("sql get user stat error: %s", err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var quest models.Quest
+
+		err := rows.Scan(&quest.Id, &quest.Name, &quest.Cost)
+		if err != nil {
+			return nil, fmt.Errorf("scan get user stat: %s", err.Error())
+		}
+		post.Quests = append(post.Quests, quest)
+	}
+
+	return &post, nil
+}
+
 func (repo *PsxRepo) QuestionEvent(event *models.EventItem) error {
 	_, err := repo.db.Exec("INSERT INTO quest_on_profile(id_profile, id_quest) VALUES($1, $2)", event.UserId, event.QuestId)
 	if err != nil {

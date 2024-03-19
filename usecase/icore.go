@@ -15,7 +15,9 @@ type ICore interface {
 	CreateUserAccount(login string, password string) error
 	FindUserAccount(login string, password string) (*models.UserItem, bool, error)
 	FindUserByLogin(login string) (bool, error)
+	GetUserStat(userId uint64) (*models.UserStat, error)
 
 	QuestionAdd(quest *models.Quest) (uint64, error)
 	QuestionEvent(event *models.EventItem) error
+	GetUserBalance(userId uint64) (uint64, error)
 }

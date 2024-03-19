@@ -131,6 +131,17 @@ func (a *Api) QuestionUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userId := r.Context().Value(middleware.UserIDKey).(uint64)
+
+	items, err := a.core.GetUserStat(userId)
+	if err != nil {
+		response.Status = http.StatusInternalServerError
+		httpResponse.SendResponse(w, r, &response, a.log)
+		return
+	}
+
+	response.Body = items
+
 	httpResponse.SendResponse(w, r, &response, a.log)
 }
 

@@ -44,6 +44,16 @@ func GetCore(psxCfg *configs.DbPsxConfig, redisCfg *configs.DbRedisCfg, log *log
 	return core, nil
 }
 
+func (c *Core) GetUserBalance(userId uint64) (uint64, error) {
+	balance, err := c.question.GetUserBalance(userId)
+	if err != nil {
+		c.log.Errorf("get user balance  error: %s", err.Error())
+		return 0, fmt.Errorf("get user balance  error: %s", err.Error())
+	}
+
+	return balance, nil
+}
+
 func (c *Core) QuestionEvent(event *models.EventItem) error {
 	err := c.question.QuestionEvent(event)
 	if err != nil {
@@ -52,6 +62,24 @@ func (c *Core) QuestionEvent(event *models.EventItem) error {
 	}
 
 	return nil
+}
+
+func (c *Core) GetUserStat(userId uint64) (*models.UserStat, error) {
+	userStat, err := c.question.GetUserStat(userId)
+	if err != nil {
+		c.log.Errorf("get user stat  error: %s", err.Error())
+		return nil, fmt.Errorf("get user stat  error: %s", err.Error())
+	}
+
+	balance, err := c.question.GetUserBalance(userId)
+	if err != nil {
+		c.log.Errorf("get user balance  error: %s", err.Error())
+		return nil, fmt.Errorf("get user balance  error: %s", err.Error())
+	}
+
+	userStat.Balance = balance
+
+	return userStat, nil
 }
 
 func (c *Core) QuestionAdd(quest *models.Quest) (uint64, error) {
