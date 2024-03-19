@@ -1,4 +1,4 @@
-host: "localhost:6379"
+host: "redis:6379"
 password: ""
 db: 0
 timer: 15
