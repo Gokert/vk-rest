@@ -29,7 +29,8 @@ func AuthCheck(next http.Handler, core Core, lg *logrus.Logger) http.Handler {
 		userId, err := core.GetUserId(r.Context(), session.Value)
 		if err != nil {
 			lg.Error("auth check error", "err", err.Error())
-			next.ServeHTTP(w, r)
+			response := models.Response{Status: http.StatusUnauthorized, Body: nil}
+			httpResponse.SendResponse(w, r, &response, lg)
 			return
 		}
 

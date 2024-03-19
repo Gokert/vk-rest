@@ -145,19 +145,6 @@ func (a *Api) QuestionUser(w http.ResponseWriter, r *http.Request) {
 	httpResponse.SendResponse(w, r, &response, a.log)
 }
 
-// @Summary signIn
-// @Tags Auth
-// @Description authenticate user by providing login and password credentials
-// @ID authenticate-user
-// @Accept json
-// @Produce json
-// @Param input body models.SigninRequest false "login and password"
-// @Success 200 {object} models.Response
-// @Failure 400 {object} models.Response
-// @Failure 401 {object} models.Response
-// @Failure 405 {object} models.Response
-// @Failure 500 {object} models.Response
-// @Router /signin [post]
 func (a *Api) Signin(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{Status: http.StatusOK, Body: nil}
 
@@ -225,19 +212,6 @@ func (a *Api) Signin(w http.ResponseWriter, r *http.Request) {
 	httpResponse.SendResponse(w, r, &response, a.log)
 }
 
-// @Summary signUp
-// @Tags Auth
-// @Desription create account
-// @ID create-account
-// @Accept json
-// @Produce json
-// @Param input body models.SignupRequest false "account information"
-// @Success 200 {object} models.Response
-// @Failure 400 {object} models.Response
-// @Failure 401 {object} models.Response
-// @Failure 405 {object} models.Response
-// @Failure 500 {object} models.Response
-// @Router /signup [post]
 func (a *Api) Signup(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{Status: http.StatusOK, Body: nil}
 
@@ -288,17 +262,6 @@ func (a *Api) Signup(w http.ResponseWriter, r *http.Request) {
 	httpResponse.SendResponse(w, r, &response, a.log)
 }
 
-// @Summary end current user session
-// @Tags Auth
-// @ID logout
-// @Produce json
-// @Param session_id header string false "Session ID"
-// @Success 200 {object} models.Response
-// @Failure 400 {object} models.Response
-// @Failure 401 {object} models.Response
-// @Failure 405 {object} models.Response
-// @Failure 500 {object} models.Response
-// @Router /logout [delete]
 func (a *Api) Logout(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{Status: http.StatusOK, Body: nil}
 
@@ -328,17 +291,6 @@ func (a *Api) Logout(w http.ResponseWriter, r *http.Request) {
 	httpResponse.SendResponse(w, r, &response, a.log)
 }
 
-// @summary check authentication status and return user info
-// @description returns user info if they are currently logged in
-// @Tags Auth
-// @produce application/json
-// @Param session_id header string false "Session ID"
-// @success 200 {object} models.AuthCheckResponse
-// @Failure 400 {object} models.Response
-// @Failure 401 {object} models.Response
-// @Failure 405 {object} models.Response
-// @Failure 500 {object} models.Response
-// @router /authcheck [get]
 func (a *Api) AuthAccept(w http.ResponseWriter, r *http.Request) {
 	response := models.Response{Status: http.StatusOK, Body: nil}
 	var authorized bool
