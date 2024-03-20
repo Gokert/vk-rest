@@ -36,15 +36,13 @@ func GetPsxRepo(config *configs.DbPsxConfig, log *logrus.Logger) (*PsxRepo, erro
 func (repo *PsxRepo) GetUserBalance(userId uint64) (uint64, error) {
 	var total uint64 = 0
 
-	fmt.Println(userId)
-
 	rows, err := repo.db.Query(`
 	select profile.id, SUM(quest.cost) FROM quest
 	LEFT JOIN quest_on_profile ON quest.id = quest_on_profile.id_quest
 	LEFT JOIN profile ON profile.id = quest_on_profile.id_profile
 	WHERE profile.id = $1
 	GROUP BY profile.id`, userId)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return 0, fmt.Errorf("sql get user balance error: %s", err.Error())
 	}
 	defer rows.Close()
@@ -71,7 +69,7 @@ func (repo *PsxRepo) GetUserStat(userId uint64) (*models.UserStat, error) {
 	LEFT JOIN quest_on_profile ON quest.id = quest_on_profile.id_quest
 	LEFT JOIN profile ON profile.id = quest_on_profile.id_profile
 	WHERE profile.id = $1`, userId)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, fmt.Errorf("sql get user stat error: %s", err.Error())
 	}
 	defer rows.Close()
@@ -102,7 +100,7 @@ func (repo *PsxRepo) QuestionAdd(quest *models.Quest) (uint64, error) {
 	var questID uint64
 	err := repo.db.QueryRow("INSERT INTO quest(name, cost) VALUES($1, $2) RETURNING id", quest.Name, quest.Cost).Scan(&questID)
 	if err != nil {
-		return 0, fmt.Errorf("create user error: %s", err.Error())
+		return 0, fmt.Errorf("question add error: %s", err.Error())
 	}
 
 	return questID, nil
