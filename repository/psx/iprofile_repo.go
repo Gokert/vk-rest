@@ -1,10 +1,13 @@
 package psx
 
-import "vk-rest/pkg/models"
+import (
+	"context"
+	"vk-rest/pkg/models"
+)
 
 type IProfileRepo interface {
-	GetUser(login string, password []byte) (*models.UserItem, bool, error)
-	FindUser(login string) (bool, error)
-	CreateUser(login string, password []byte) error
-	GetUserId(login string) (uint64, error)
+	GetUser(ctx context.Context, login string, password []byte) (*models.UserItem, bool, error)
+	FindUser(ctx context.Context, login string) (bool, error)
+	CreateUser(ctx context.Context, login string, password []byte) error
+	GetUserId(ctx context.Context, login string) (uint64, error)
 }

@@ -74,7 +74,7 @@ func (a *Api) QuestionAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = a.core.QuestionAdd(&request)
+	_, err = a.core.QuestionAdd(r.Context(), &request)
 	if err != nil {
 		a.log.Error("Question add error: ", err.Error())
 		response.Status = http.StatusInternalServerError
@@ -112,7 +112,7 @@ func (a *Api) QuestionEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.core.QuestionEvent(&request)
+	err = a.core.QuestionEvent(r.Context(), &request)
 	if err != nil {
 		response.Status = http.StatusInternalServerError
 		httpResponse.SendResponse(w, r, &response, a.log)
@@ -133,7 +133,7 @@ func (a *Api) QuestionUser(w http.ResponseWriter, r *http.Request) {
 
 	userId := r.Context().Value(middleware.UserIDKey).(uint64)
 
-	items, err := a.core.GetUserStat(userId)
+	items, err := a.core.GetUserStat(r.Context(), userId)
 	if err != nil {
 		response.Status = http.StatusInternalServerError
 		httpResponse.SendResponse(w, r, &response, a.log)
@@ -172,7 +172,7 @@ func (a *Api) Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, found, err := a.core.FindUserAccount(request.Login, request.Password)
+	_, found, err := a.core.FindUserAccount(r.Context(), request.Login, request.Password)
 	if err != nil {
 		a.log.Error("Signin error: ", err.Error())
 		response.Status = http.StatusInternalServerError
@@ -224,7 +224,7 @@ func (a *Api) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	found, err := a.core.FindUserByLogin(request.Login)
+	found, err := a.core.FindUserByLogin(r.Context(), request.Login)
 	if err != nil {
 		a.log.Error("Signup error: ", err.Error())
 		response.Status = http.StatusInternalServerError
@@ -238,7 +238,7 @@ func (a *Api) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.core.CreateUserAccount(request.Login, request.Password)
+	err = a.core.CreateUserAccount(r.Context(), request.Login, request.Password)
 	if err != nil {
 		a.log.Error("create user error: ", err.Error())
 		response.Status = http.StatusBadRequest

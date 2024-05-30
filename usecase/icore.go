@@ -12,12 +12,12 @@ type ICore interface {
 	KillSession(ctx context.Context, sid string) error
 	GetUserId(ctx context.Context, sid string) (uint64, error)
 
-	CreateUserAccount(login string, password string) error
-	FindUserAccount(login string, password string) (*models.UserItem, bool, error)
-	FindUserByLogin(login string) (bool, error)
-	GetUserStat(userId uint64) (*models.UserStat, error)
+	CreateUserAccount(ctx context.Context, login string, password string) error
+	FindUserAccount(ctx context.Context, login string, password string) (*models.UserItem, bool, error)
+	FindUserByLogin(ctx context.Context, login string) (bool, error)
+	GetUserStat(ctx context.Context, userId uint64) (*models.UserStat, error)
 
-	QuestionAdd(quest *models.Quest) (uint64, error)
-	QuestionEvent(event *models.EventItem) error
-	GetUserBalance(userId uint64) (uint64, error)
+	QuestionAdd(ctx context.Context, quest *models.Quest) (uint64, error)
+	QuestionEvent(ctx context.Context, event *models.EventItem) error
+	GetUserBalance(ctx context.Context, userId uint64) (uint64, error)
 }

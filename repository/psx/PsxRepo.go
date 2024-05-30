@@ -1,6 +1,7 @@
 package psx
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -33,10 +34,10 @@ func GetPsxRepo(config *configs.DbPsxConfig, log *logrus.Logger) (*PsxRepo, erro
 	return &PsxRepo{db: db}, nil
 }
 
-func (repo *PsxRepo) GetUserBalance(userId uint64) (uint64, error) {
+func (repo *PsxRepo) GetUserBalance(ctx context.Context, userId uint64) (uint64, error) {
 	var total uint64 = 0
 
-	rows, err := repo.db.Query(`
+	rows, err := repo.db.QueryContext(ctx, `
 	select profile.id, SUM(quest.cost) FROM quest
 	LEFT JOIN quest_on_profile ON quest.id = quest_on_profile.id_quest
 	LEFT JOIN profile ON profile.id = quest_on_profile.id_profile
@@ -61,10 +62,10 @@ func (repo *PsxRepo) GetUserBalance(userId uint64) (uint64, error) {
 	return total, nil
 }
 
-func (repo *PsxRepo) GetUserStat(userId uint64) (*models.UserStat, error) {
+func (repo *PsxRepo) GetUserStat(ctx context.Context, userId uint64) (*models.UserStat, error) {
 	post := models.UserStat{}
 
-	rows, err := repo.db.Query(`
+	rows, err := repo.db.QueryContext(ctx, `
 	select quest.id, quest.name, quest.cost FROM quest
 	LEFT JOIN quest_on_profile ON quest.id = quest_on_profile.id_quest
 	LEFT JOIN profile ON profile.id = quest_on_profile.id_profile
@@ -87,8 +88,8 @@ func (repo *PsxRepo) GetUserStat(userId uint64) (*models.UserStat, error) {
 	return &post, nil
 }
 
-func (repo *PsxRepo) QuestionEvent(event *models.EventItem) error {
-	_, err := repo.db.Exec("INSERT INTO quest_on_profile(id_profile, id_quest) VALUES($1, $2)", event.UserId, event.QuestId)
+func (repo *PsxRepo) QuestionEvent(ctx context.Context, event *models.EventItem) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO quest_on_profile(id_profile, id_quest) VALUES($1, $2)", event.UserId, event.QuestId)
 	if err != nil {
 		return fmt.Errorf("insert question event error: %s", err.Error())
 	}
@@ -96,9 +97,9 @@ func (repo *PsxRepo) QuestionEvent(event *models.EventItem) error {
 	return nil
 }
 
-func (repo *PsxRepo) QuestionAdd(quest *models.Quest) (uint64, error) {
+func (repo *PsxRepo) QuestionAdd(ctx context.Context, quest *models.Quest) (uint64, error) {
 	var questID uint64
-	err := repo.db.QueryRow("INSERT INTO quest(name, cost) VALUES($1, $2) RETURNING id", quest.Name, quest.Cost).Scan(&questID)
+	err := repo.db.QueryRowContext(ctx, "INSERT INTO quest(name, cost) VALUES($1, $2) RETURNING id", quest.Name, quest.Cost).Scan(&questID)
 	if err != nil {
 		return 0, fmt.Errorf("question add error: %s", err.Error())
 	}
@@ -106,10 +107,10 @@ func (repo *PsxRepo) QuestionAdd(quest *models.Quest) (uint64, error) {
 	return questID, nil
 }
 
-func (repo *PsxRepo) GetUser(login string, password []byte) (*models.UserItem, bool, error) {
+func (repo *PsxRepo) GetUser(ctx context.Context, login string, password []byte) (*models.UserItem, bool, error) {
 	post := &models.UserItem{}
 
-	err := repo.db.QueryRow("SELECT profile.id, profile.login, profile.balance FROM profile "+
+	err := repo.db.QueryRowContext(ctx, "SELECT profile.id, profile.login, profile.balance FROM profile "+
 		"WHERE profile.login = $1 AND profile.password = $2 ", login, password).Scan(&post.Id, &post.Login, &post.Balance)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -121,10 +122,10 @@ func (repo *PsxRepo) GetUser(login string, password []byte) (*models.UserItem, b
 	return post, true, nil
 }
 
-func (repo *PsxRepo) FindUser(login string) (bool, error) {
+func (repo *PsxRepo) FindUser(ctx context.Context, login string) (bool, error) {
 	post := &models.UserItem{}
 
-	err := repo.db.QueryRow(
+	err := repo.db.QueryRowContext(ctx,
 		"SELECT login FROM profile "+
 			"WHERE login = $1", login).Scan(&post.Login)
 	if err != nil {
@@ -137,9 +138,9 @@ func (repo *PsxRepo) FindUser(login string) (bool, error) {
 	return true, nil
 }
 
-func (repo *PsxRepo) CreateUser(login string, password []byte) error {
+func (repo *PsxRepo) CreateUser(ctx context.Context, login string, password []byte) error {
 	var userID uint64
-	err := repo.db.QueryRow("INSERT INTO profile(login, balance, password) VALUES($1, $2, $3) RETURNING id", login, 0, password).Scan(&userID)
+	err := repo.db.QueryRowContext(ctx, "INSERT INTO profile(login, balance, password) VALUES($1, $2, $3) RETURNING id", login, 0, password).Scan(&userID)
 	if err != nil {
 		return fmt.Errorf("create user error: %s", err.Error())
 	}
@@ -147,10 +148,10 @@ func (repo *PsxRepo) CreateUser(login string, password []byte) error {
 	return nil
 }
 
-func (repo *PsxRepo) GetUserId(login string) (uint64, error) {
+func (repo *PsxRepo) GetUserId(ctx context.Context, login string) (uint64, error) {
 	var userID uint64
 
-	err := repo.db.QueryRow(
+	err := repo.db.QueryRowContext(ctx,
 		"SELECT profile.id FROM profile WHERE profile.login = $1", login).Scan(&userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

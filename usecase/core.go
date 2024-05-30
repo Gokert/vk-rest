@@ -44,8 +44,8 @@ func GetCore(psxCfg *configs.DbPsxConfig, redisCfg *configs.DbRedisCfg, log *log
 	return core, nil
 }
 
-func (c *Core) GetUserBalance(userId uint64) (uint64, error) {
-	balance, err := c.question.GetUserBalance(userId)
+func (c *Core) GetUserBalance(ctx context.Context, userId uint64) (uint64, error) {
+	balance, err := c.question.GetUserBalance(ctx, userId)
 	if err != nil {
 		c.log.Errorf("get user balance  error: %s", err.Error())
 		return 0, fmt.Errorf("get user balance  error: %s", err.Error())
@@ -54,8 +54,8 @@ func (c *Core) GetUserBalance(userId uint64) (uint64, error) {
 	return balance, nil
 }
 
-func (c *Core) QuestionEvent(event *models.EventItem) error {
-	err := c.question.QuestionEvent(event)
+func (c *Core) QuestionEvent(ctx context.Context, event *models.EventItem) error {
+	err := c.question.QuestionEvent(ctx, event)
 	if err != nil {
 		c.log.Errorf("question event  error: %s", err.Error())
 		return fmt.Errorf("question event error: %s", err.Error())
@@ -64,14 +64,14 @@ func (c *Core) QuestionEvent(event *models.EventItem) error {
 	return nil
 }
 
-func (c *Core) GetUserStat(userId uint64) (*models.UserStat, error) {
-	userStat, err := c.question.GetUserStat(userId)
+func (c *Core) GetUserStat(ctx context.Context, userId uint64) (*models.UserStat, error) {
+	userStat, err := c.question.GetUserStat(ctx, userId)
 	if err != nil {
 		c.log.Errorf("get user stat  error: %s", err.Error())
 		return nil, fmt.Errorf("get user stat  error: %s", err.Error())
 	}
 
-	balance, err := c.question.GetUserBalance(userId)
+	balance, err := c.question.GetUserBalance(ctx, userId)
 	if err != nil {
 		c.log.Errorf("get user balance  error: %s", err.Error())
 		return nil, fmt.Errorf("get user balance  error: %s", err.Error())
@@ -82,12 +82,12 @@ func (c *Core) GetUserStat(userId uint64) (*models.UserStat, error) {
 	return userStat, nil
 }
 
-func (c *Core) QuestionAdd(quest *models.Quest) (uint64, error) {
+func (c *Core) QuestionAdd(ctx context.Context, quest *models.Quest) (uint64, error) {
 	if quest.Name == "" || quest.Cost == 0 {
 		return 0, fmt.Errorf("low params")
 	}
 
-	questId, err := c.question.QuestionAdd(quest)
+	questId, err := c.question.QuestionAdd(ctx, quest)
 	if err != nil {
 		c.log.Errorf("question add error: %s", err.Error())
 		return 0, fmt.Errorf("question add error: %s", err.Error())
@@ -106,7 +106,7 @@ func (c *Core) GetUserId(ctx context.Context, sid string) (uint64, error) {
 		return 0, fmt.Errorf("get user login error: %s", err.Error())
 	}
 
-	id, err := c.profiles.GetUserId(login)
+	id, err := c.profiles.GetUserId(ctx, login)
 	if err != nil {
 		c.log.Errorf("get user id error: %s", err.Error())
 		return 0, fmt.Errorf("get user id error: %s", err.Error())
@@ -178,9 +178,9 @@ func (c *Core) KillSession(ctx context.Context, sid string) error {
 	return nil
 }
 
-func (c *Core) CreateUserAccount(login string, password string) error {
+func (c *Core) CreateUserAccount(ctx context.Context, login string, password string) error {
 	hashPassword := utils.HashPassword(password)
-	err := c.profiles.CreateUser(login, hashPassword)
+	err := c.profiles.CreateUser(ctx, login, hashPassword)
 	if err != nil {
 		c.log.Errorf("create user account error: %s", err.Error())
 		return fmt.Errorf("create user account error: %s", err.Error())
@@ -189,9 +189,9 @@ func (c *Core) CreateUserAccount(login string, password string) error {
 	return nil
 }
 
-func (c *Core) FindUserAccount(login string, password string) (*models.UserItem, bool, error) {
+func (c *Core) FindUserAccount(ctx context.Context, login string, password string) (*models.UserItem, bool, error) {
 	hashPassword := utils.HashPassword(password)
-	user, found, err := c.profiles.GetUser(login, hashPassword)
+	user, found, err := c.profiles.GetUser(ctx, login, hashPassword)
 	if err != nil {
 		c.log.Errorf("find user error: %s", err.Error())
 		return nil, false, fmt.Errorf("find user account error: %s", err.Error())
@@ -199,8 +199,8 @@ func (c *Core) FindUserAccount(login string, password string) (*models.UserItem,
 	return user, found, nil
 }
 
-func (c *Core) FindUserByLogin(login string) (bool, error) {
-	found, err := c.profiles.FindUser(login)
+func (c *Core) FindUserByLogin(ctx context.Context, login string) (bool, error) {
+	found, err := c.profiles.FindUser(ctx, login)
 	if err != nil {
 		c.log.Errorf("find user by login error: %s", err.Error())
 		return false, fmt.Errorf("find user by login error: %s", err.Error())
