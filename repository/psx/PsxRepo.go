@@ -7,7 +7,9 @@ import (
 	"fmt"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/sirupsen/logrus"
+	"time"
 	"vk-rest/configs"
+	utils "vk-rest/pkg"
 	"vk-rest/pkg/models"
 )
 
@@ -23,15 +25,41 @@ func GetPsxRepo(config *configs.DbPsxConfig, log *logrus.Logger) (*PsxRepo, erro
 		log.Errorf("sql open error: %s", err.Error())
 		return nil, fmt.Errorf("get user repo err: %s", err.Error())
 	}
-	err = db.Ping()
-	if err != nil {
-		log.Errorf("sql ping error: %s", err.Error())
-		return nil, fmt.Errorf("get user repo error: %s", err.Error())
-	}
-	db.SetMaxOpenConns(config.MaxOpenConns)
 
-	log.Info("Psx created successful")
-	return &PsxRepo{db: db}, nil
+	repo := &PsxRepo{db: db}
+
+	errs := make(chan error)
+	go func() {
+		errs <- repo.pingDb(3, log)
+	}()
+
+	if err := <-errs; err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+
+	db.SetMaxOpenConns(config.MaxOpenConns)
+	log.Info("Successfully connected to database")
+
+	return repo, nil
+}
+
+func (repo *PsxRepo) pingDb(timer uint32, log *logrus.Logger) error {
+	var err error
+	var retries int
+
+	for retries < utils.MaxRetries {
+		err = repo.db.Ping()
+		if err == nil {
+			return nil
+		}
+
+		retries++
+		log.Errorf("sql ping error: %s", err.Error())
+		time.Sleep(time.Duration(timer) * time.Second)
+	}
+
+	return fmt.Errorf("sql max pinging error: %s", err.Error())
 }
 
 func (repo *PsxRepo) GetUserBalance(ctx context.Context, userId uint64) (uint64, error) {

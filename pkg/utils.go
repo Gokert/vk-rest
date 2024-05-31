@@ -44,6 +44,8 @@ func ValidateStringSize(validatedString string, begin int, end int, validateErro
 	return nil
 }
 
+const MaxRetries = 5
+
 const (
 	InvalidEmailOrPasswordError     = "Invalid email or password"
 	SessionRepositoryNotActiveError = "Session repository not active"
